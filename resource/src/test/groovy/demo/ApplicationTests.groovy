@@ -28,6 +28,6 @@ public class ApplicationTests {
 	@Test
 	public void resourceLoads() {
 		ResponseEntity<String> response = template.getForEntity("http://localhost:${port}/", String.class)
-		assertEquals(HttpStatus.OK, response.getStatusCode())
+		assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode())
 	}
 }
