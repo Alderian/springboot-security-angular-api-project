@@ -1,6 +1,7 @@
 package demo
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,6 +29,8 @@ public class ApplicationTests {
 	@Test
 	public void resourceLoads() {
 		ResponseEntity<String> response = template.getForEntity("http://localhost:${port}/", String.class)
-		assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode())
+		assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode())
+		String auth = response.getHeaders().getFirst("WWW-Authenticate")
+		assertTrue("Wrong location: " + auth , auth.startsWith("Bearer"))
 	}
 }

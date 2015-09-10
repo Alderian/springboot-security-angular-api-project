@@ -1,10 +1,7 @@
 package demo;
 
 import static org.junit.Assert.assertEquals;
-
-import java.net.HttpCookie;
-import java.net.URI;
-import java.util.List;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,15 +9,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -32,6 +24,9 @@ public class ApplicationTests {
 	@Value("${local.server.port}")
 	private int port;
 
+	@Value("${spring.oauth2.client.userAuthorizationUri}")
+	private String authorizeUri;
+	
 	private RestTemplate template = new TestRestTemplate();
 
 	@Test
@@ -49,34 +44,19 @@ public class ApplicationTests {
 	}
 
 	@Test
-	public void loginSucceeds() {
+	public void resourceEndpointProtected() {
 		ResponseEntity<String> response = template.getForEntity("http://localhost:"
 				+ port + "/resource", String.class);
-		String csrf = getCsrf(response.getHeaders());
-		MultiValueMap<String, String> form = new LinkedMultiValueMap<String, String>();
-		form.set("username", "user");
-		form.set("password", "password");
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("X-XSRF-TOKEN", csrf);
-		headers.put("COOKIE", response.getHeaders().get("Set-Cookie"));
-		RequestEntity<MultiValueMap<String, String>> request = new RequestEntity<MultiValueMap<String, String>>(
-				form, headers, HttpMethod.POST, URI.create("http://localhost:" + port
-						+ "/login"));
-		ResponseEntity<Void> location = template.exchange(request, Void.class);
-		assertEquals("http://localhost:" + port + "/",
-				location.getHeaders().getFirst("Location"));
+		assertEquals(HttpStatus.FOUND, response.getStatusCode());
 	}
 
-	private String getCsrf(HttpHeaders headers) {
-		for (String header : headers.get("Set-Cookie")) {
-			List<HttpCookie> cookies = HttpCookie.parse(header);
-			for (HttpCookie cookie : cookies) {
-				if ("XSRF-TOKEN".equals(cookie.getName())) {
-					return cookie.getValue();
-				}
-			}
-		}
-		return null;
+	@Test
+	public void loginRedirects() {
+		ResponseEntity<String> response = template.getForEntity("http://localhost:"
+				+ port + "/login", String.class);
+		assertEquals(HttpStatus.FOUND, response.getStatusCode());
+		String location = response.getHeaders().getFirst("Location");
+		assertTrue("Wrong location: " + location , location.startsWith(authorizeUri));
 	}
-	
+
 }

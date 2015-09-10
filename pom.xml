@@ -3,12 +3,13 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.demo</groupId>
-	<artifactId>demo-parent</artifactId>
+	<artifactId>parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>Spring Pairs Samples Vanilla</name>
+	<name>Spring Boot Angular Demo</name>
 
 	<modules>
+		<module>authserver</module>
 		<module>ui</module>
 		<module>resource</module>
 	</modules>
